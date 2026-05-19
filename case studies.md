@@ -2,6 +2,27 @@
 
 This document summarizes documented real-world mesh network deployments, what worked, what didn't, and what they suggest for a Vermont deployment. All cases involve LoRa-based mesh technology (Meshtastic or MeshCore) deployed in response to or in anticipation of infrastructure failures.
 
+<ul>
+<li>Birmingham, Alabama: <a href="http://birminghammesh.org/">Birmingham Mesh</a></li>
+<li>Calgary, Alberta: <a href="https://yycmesh.com">YYC Mesh</a></li>
+<li>Asheville, North Carolina: <a href="https://meshavl.com/">MeshAVL</a></li>
+<li>Charlotte, North Carolina: <a href="https://charlottemesh.org/">Charlotte Mesh</a></li>
+<li>North Carolina <a href="https://ncmesh.net/">NC Mesh</a></li>
+<li>Chicago, Illinois: <a href="https://chicagolandmesh.org/">Chicagoland Mesh</a></li>
+<li>Colorado: <a href="https://coloradomesh.org/">Colorado Mesh</a></li>
+<li>Hawaii: <a href="https://www.hawaiimesh.net/">Hawaii Mesh</a></li>
+<li>Nashville, Tennessee: <a href="https://www.instagram.com/meshville.tn">Meshville</a></li>
+<li>Northern Texas: <a href="https://ntxmesh.com">North Texas Mesh</a></li>
+<li>Southern Texas: <a href="https://sanantoniogmrs.com/stxmesh/">South Texas Mesh</a></li>
+<li>Northwest Arkansas: <a href="https://nwamesh.com/">Northwest Arkansas Mesh</a></li>
+<li>Okmesh: <a href="https://okmesh.org/">Okmesh</a></li>
+<li>Ohio: <a href="https://www.ohiomesh.net">Ohio Mesh</a></li>
+<li>Philadelphia, Pennsylvania: <a href="https://iffybooks.net/">Iffy Books is leading the effort</a></li>
+<li>San Francisco (Bay Area): <a href="https://bayme.sh">bayme.sh</a></li>
+<li>Southern California: <a href="https://socalmesh.org/">SoCal Mesh</a></li>
+<li>Wisconsin: <a href="https://meshconsin.org/">Meshconsin</a></li>
+</ul>
+
 ---
 
 ## Case Study 1: Hurricane Helene — Western North Carolina (September 2024)
