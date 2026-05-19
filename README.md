@@ -1,12 +1,8 @@
-# Mesh Vermont
+# Vermont Community Mesh Network
 
 Vermont communities have experienced catastrophic communication failures during disasters three times in twelve years. A proven, open-source technology now exists that would provide a resilient backup communication layer for the entire state for under $5,000 in hardware — functioning without cellular service, internet, or grid power. No other state has built this. Vermont should be first.
 
-# Vermont Community Mesh Network
-
 A community LoRa mesh network for Burlington, Vermont — built on open-source [Meshtastic](https://meshtastic.org) and [MeshCore](https://github.com/ripplebiz/MeshCore) firmware to provide off-grid, infrastructure-independent communication for residents, community organizations, and emergency responders.
-
-This is a [VERSO](https://github.com/VERSO-UVM) project at the University of Vermont, developed through the [ORCA](https://github.com/VERSO-UVM/ORCA) program.
 
 ---
 
