@@ -23,6 +23,11 @@ This document summarizes documented real-world mesh network deployments, what wo
 <li>Wisconsin: <a href="https://meshconsin.org/">Meshconsin</a></li>
 </ul>
 
+
+# Mesh Network Deployments: Case Studies and Lessons for Vermont
+
+This document summarizes documented real-world mesh network deployments, what worked, what didn't, and what they suggest for a Vermont deployment. All cases involve LoRa-based mesh technology (Meshtastic or MeshCore) deployed in response to or in anticipation of infrastructure failures.
+
 ---
 
 ## Case Study 1: Hurricane Helene — Western North Carolina (September 2024)
@@ -33,7 +38,7 @@ This document summarizes documented real-world mesh network deployments, what wo
 The communication failure was immediate and total. [The FCC reported 3,432 cell sites down across the Southeast](https://www.telecomstechnews.com/news/how-to-achieve-reliable-communication-in-emergency-scenarios/). In the hardest-hit counties of western North Carolina, [fewer than 10% of cell sites remained operational](https://www.telecomstechnews.com/news/how-to-achieve-reliable-communication-in-emergency-scenarios/). The Asheville region was widely described as a "blackout zone" — no power, no cell service, no internet, roads impassable.
 
 **Why mesh was used:**
-There was no pre-deployed mesh infrastructure in the affected area before Helene. What emerged was entirely organic and community-driven — people who already had Meshtastic devices began using them in the days and weeks following the storm. [In the weeks after Helene hit, local groups began adding off-grid radio options including Meshtastic to their emergency playbooks](https://getupandgocamping.com/meshtastic-for-search-and-rescue-emergency-communication-in-the-wilderness/). The NC Mesh community at [ncmesh.net](https://ncmesh.net) grew directly from this experience, now building out [a state-wide network of grid and solar-powered Meshtastic radios across North Carolina](https://ncmesh.net/learn/).
+There was no pre-deployed mesh infrastructure in the affected area before Helene. What emerged was entirely organic and community-driven — people who already had Meshtastic devices began using them in the days and weeks following the storm. [In the weeks after Helene hit, local groups began adding off-grid radio options including Meshtastic to their emergency playbooks](https://ncmesh.net/learn/). The NC Mesh community at [ncmesh.net](https://ncmesh.net) grew directly from this experience, now building out [a state-wide network of grid and solar-powered Meshtastic radios across North Carolina](https://ncmesh.net/learn/).
 
 In the mountains around Asheville, [MeshAVL](https://meshavl.com) emerged as a local hub specifically focused on MeshCore and Meshtastic for the mountain terrain — emphasizing that the Appalachian landscape creates the same radio propagation dynamics as Vermont's Green Mountains, where ridgeline nodes dramatically outperform valley placements.
 
@@ -67,13 +72,13 @@ Austin Mesh is now one of the most thoroughly documented community mesh deployme
 The 2024 Texas floods provided further validation — [real-world deployments during the 2025 Texas floods showed mesh networks carrying mutual-aid traffic for days when commercial networks were down](https://dev.to/noperai42eng/how-to-survive-an-infrastructure-meltdown-with-meshtastic-and-meshcore-2026-dej).
 
 **What worked:**
-- [A solar-powered repeater infrastructure on high points across Austin provides backbone coverage that personal devices connect to, rather than requiring device-to-device direct links](https://austinmesh.com/)
+- [A solar-powered repeater infrastructure on high points across Austin provides backbone coverage that personal devices connect to, rather than requiring device-to-device direct links](https://www.austinmesh.org/)
 - Community-driven model with no central administration scaled organically as more residents added nodes
 - Austin Mesh has [developed and published detailed operating conventions](https://www.austinmesh.org/learn/meshcore-vs-meshtastic/) covering channel discipline, firmware selection, and node configuration — directly applicable to other cities
 - The transition from Meshtastic to hybrid Meshtastic/MeshCore is thoroughly documented, providing a roadmap for any community network planning for scale
 
 **What didn't work / ongoing challenges:**
-- [Austin Mesh explicitly discourages MQTT bridging because busy MQTT servers can quickly overwhelm nodes and flood the entire network with traffic rendering local communications difficult or impossible](https://austinmesh.com/) — this has to be an intentional design decision, not an afterthought
+- [Austin Mesh explicitly discourages MQTT bridging because busy MQTT servers can quickly overwhelm nodes and flood the entire network with traffic rendering local communications difficult or impossible](https://www.austinmesh.org/learn/) — this has to be an intentional design decision, not an afterthought
 - [Terrain creates hard limits — hill/valley terrain in Austin often needs many relays, and Meshtastic's default seven-hop ceiling has been a constraint for metro-scale coverage](https://www.austinmesh.org/learn/meshcore-vs-meshtastic/)
 - Getting non-technical residents to understand and follow operating conventions is an ongoing challenge as the network grows
 
@@ -119,8 +124,8 @@ On April 28, 2025, [a substation failure in Granada, Spain triggered a cascading
 [The April 2025 Iberian blackout showed how fragile connected infrastructure really is — millions lost communication for hours](https://www.wave-access.com/public_en/blog/when-the-grid-goes-dark-meshtastic-for-resilient-networks/). The key structural problem the blackout exposed is one that Vermont already knows well from its own experience: [communications depend on the availability of electricity, and even when telecommunications networks remain technically operational, service can fail simply because equipment in homes or mobile towers loses power](https://bip.inesctec.pt/en/inesctecwatch/energy-and-telecommunications-in-times-of-crisis-how-can-portugal-prepare-for-the-next-extreme-events/).
 
 **What worked:**
-- [Meshtastic nodes with solar charging and battery buffers remained operational throughout the outage, providing communication where cellular was unavailable](https://aiv2.eu/blackout-meshtastic-off-grid-communication/)
-- [People who had pre-deployed solar nodes across cities stayed connected and could coordinate while neighbors with only cellular access were isolated](https://aiv2.eu/blackout-meshtastic-off-grid-communication/)
+- [Meshtastic nodes with solar charging and battery buffers remained operational throughout the outage, providing communication where cellular was unavailable](https://www.wave-access.com/public_en/blog/when-the-grid-goes-dark-meshtastic-for-resilient-networks/)
+- [People who had pre-deployed solar nodes across cities stayed connected and could coordinate while neighbors with only cellular access were isolated](https://www.wave-access.com/public_en/blog/when-the-grid-goes-dark-meshtastic-for-resilient-networks/)
 - The event drove significant growth in European Meshtastic adoption — the Netherlands, Germany, Poland, and Portugal all saw expanded community deployments in the months following
 
 **What didn't work:**
