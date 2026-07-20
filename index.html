@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="VERSO is building a resilient, off-grid Meshtastic mesh network for Vermont — starting at the University of Vermont — to support community communication during outages and disasters."
+    />
+    <title>VERSO Mesh Network | University of Vermont Community Resilience</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero" id="top">
+      <nav class="nav">
+        <a class="brand" href="#top">
+          <span class="brand-mark">V</span>
+          VERSO Mesh Network
+        </a>
+        <div class="nav-links">
+          <a href="#mission">Mission</a>
+          <a href="#how-it-works">How It Works</a>
+          <a href="#first-node">First Node</a>
+          <a href="#community">Community</a>
+          <a href="#resilience">Resilience</a>
+          <a href="#faq">FAQ</a>
+        </div>
+        <a class="button nav-cta" href="#get-connected">Get Connected</a>
+      </nav>
+
+      <div class="hero-content">
+        <p class="eyebrow">University of Vermont • Open-source community resilience</p>
+        <h1>Building a resilient mesh network for Vermont.</h1>
+        <p class="lead">
+          VERSO is helping the open-source Meshtastic community grow an organic,
+          off-grid communications layer that can work when cellular service,
+          internet, and power are unavailable.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#get-connected">Get connected</a>
+          <a class="button secondary" href="#how-it-works">How it works</a>
+        </div>
+
+        <ul class="stats">
+          <li>
+            <strong>20–30</strong>
+            <span>nodes visible in Burlington</span>
+          </li>
+          <li>
+            <strong>Plattsburgh</strong>
+            <span>to Montreal and New Hampshire</span>
+          </li>
+          <li>
+            <strong>Solar-ready</strong>
+            <span>first node at Votey Building</span>
+          </li>
+        </ul>
+      </div>
+    </header>
+
+    <main>
+      <section class="section" id="mission">
+        <div class="section-heading">
+          <p class="eyebrow">Mission</p>
+          <h2>Supporting Vermont before the next outage.</h2>
+        </div>
+        <div class="content-grid">
+          <div>
+            <p>
+              Vermont's geography, weather, and aging infrastructure make it a
+              strong fit for low-cost, decentralized communications. A mesh
+              network can connect neighbors, volunteers, and responders even when
+              the normal systems fail.
+            </p>
+            <p>
+              The first deployment centers on the University of Vermont campus,
+              where a solar-powered RAK WisMesh Repeater Mini can become a durable
+              backbone node for the surrounding community.
+            </p>
+          </div>
+          <div class="card">
+            <h3>What the network is for</h3>
+            <ul>
+              <li>Off-grid text messaging and local coordination</li>
+              <li>Community resilience during storms and outages</li>
+              <li>Support for emergency planning and mutual aid</li>
+              <li>Open participation for residents and volunteers</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="how-it-works">
+        <div class="section-heading">
+          <p class="eyebrow">How it works</p>
+          <h2>No towers, no internet, no subscription.</h2>
+        </div>
+        <div class="content-grid">
+          <div>
+            <p>
+              Meshtastic and MeshCore turn inexpensive LoRa (Long Range) radios
+              into a decentralized, peer-to-peer mesh. Every device that hears a
+              message rebroadcasts it, so the network's reach grows with every
+              new node — no cell towers, no ISPs, and no monthly bill.
+            </p>
+            <p>
+              Each person carries a small radio paired to their phone over
+              Bluetooth. Fixed, elevated repeater nodes stitch coverage together
+              across a city or valley. When internet is available, a node can
+              bridge the local mesh to the global Meshtastic network — when it's
+              not, the radio mesh keeps working entirely on its own.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Network specs</h3>
+            <dl class="spec-list">
+              <div>
+                <dt>Frequency</dt>
+                <dd>915MHz — FCC Part 15, no ham license required</dd>
+              </div>
+              <div>
+                <dt>Range</dt>
+                <dd>1–3km urban · 5–15km elevated · 15–30km+ over open water</dd>
+              </div>
+              <div>
+                <dt>Encryption</dt>
+                <dd>AES-256 on every channel</dd>
+              </div>
+              <div>
+                <dt>Device cost</dt>
+                <dd>$35–100 per node</dd>
+              </div>
+              <div>
+                <dt>App</dt>
+                <dd>Free, open-source — iOS and Android</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="first-node">
+        <div class="section-heading">
+          <p class="eyebrow">First node</p>
+          <h2>Votey Building at UVM as a launch point.</h2>
+        </div>
+        <div class="content-grid">
+          <div class="card wide">
+            <h3>Proposed deployment</h3>
+            <p>
+              The inaugural node will be placed at the Votey Building on the
+              University of Vermont campus. A solar-powered RAK WisMesh Repeater
+              Mini would be mounted on a pole to create a reliable, elevated
+              communications relay for nearby neighborhoods and campus users.
+            </p>
+            <ul>
+              <li>Elevated placement improves range and line-of-sight</li>
+              <li>Solar power supports continuity during grid outages</li>
+              <li>Open-source hardware keeps the deployment affordable and adaptable</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Why this matters</h3>
+            <p>
+              A single well-placed node can strengthen local coverage, help new
+              users discover the mesh, and establish a credible foundation for
+              future expansion into Burlington and beyond.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="get-connected">
+        <div class="section-heading">
+          <p class="eyebrow">Join the mesh</p>
+          <h2>From unboxing to a live node in under an hour.</h2>
+        </div>
+        <div class="content-grid">
+          <ol class="steps">
+            <li>
+              <span class="step-num">1</span>
+              <div>
+                <h3>Get a device</h3>
+                <p>Any Meshtastic-compatible LoRa radio works — handhelds start around $35–45.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">2</span>
+              <div>
+                <h3>Flash the firmware</h3>
+                <p>Use the browser-based
+                  <a href="https://flasher.meshtastic.org" target="_blank" rel="noreferrer">Meshtastic flasher</a>
+                  — takes about five minutes per device.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">3</span>
+              <div>
+                <h3>Pair the app</h3>
+                <p>Install the free
+                  <a href="https://meshtastic.org/docs/software/android/" target="_blank" rel="noreferrer">Meshtastic app</a>
+                  and connect over Bluetooth.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">4</span>
+              <div>
+                <h3>Join BTV-Mesh</h3>
+                <p>Set your region to US and configure the public BTV-Mesh channel — no registration required.</p>
+              </div>
+            </li>
+            <li>
+              <span class="step-num">5</span>
+              <div>
+                <h3>Show up on the map</h3>
+                <p>Enable MQTT on a WiFi-connected node and it will appear on
+                  <a href="https://meshmap.net" target="_blank" rel="noreferrer">meshmap.net</a>.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="section" id="community">
+        <div class="section-heading">
+          <p class="eyebrow">Community growth</p>
+          <h2>Built to grow organically.</h2>
+        </div>
+        <div class="content-grid">
+          <div>
+            <p>
+              The current community already reports roughly 20–30 visible nodes in
+              and around Burlington, with links reaching toward Plattsburgh,
+              Montreal, and New Hampshire. That makes Vermont well-positioned to
+              build a practical regional mesh that can expand from campus and
+              neighborhood adoption into a broader resilience network.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Deployment approach</h3>
+            <ul>
+              <li>Start with a visible, reliable anchor node</li>
+              <li>Publish simple joining instructions and channel guidance</li>
+              <li>Let community participation expand naturally</li>
+              <li>Document lessons for future Vermont partners</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt" id="resilience">
+        <div class="section-heading">
+          <p class="eyebrow">Redundancy and resilience</p>
+          <h2>Mesh networks have already proven useful in real U.S. disasters.</h2>
+        </div>
+
+        <div class="cards">
+          <article class="card">
+            <h3>Hurricane Helene, western North Carolina</h3>
+            <p>
+              After Helene disrupted power and communications across the region,
+              local groups and community networks used Meshtastic-based tools to
+              support coordination when mobile networks were unstable or down.
+            </p>
+            <p class="citation">
+              Sources: <a href="https://www.ncdps.gov/our-organization/emergency-management/tropical-storm-helene" target="_blank" rel="noreferrer">NC DPS</a>,
+              <a href="https://ncmesh.net/learn/" target="_blank" rel="noreferrer">NC Mesh</a>,
+              <a href="https://www.telecomstechnews.com/news/how-to-achieve-reliable-communication-in-emergency-scenarios/" target="_blank" rel="noreferrer">FCC / telecom analysis</a>
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Winter Storm Uri, Texas</h3>
+            <p>
+              During the 2021 Texas power crisis, Austin Mesh was organized around
+              a clear goal: provide a text-messaging layer that could work without
+              cellular towers, internet, or grid power.
+            </p>
+            <p class="citation">
+              Source: <a href="https://www.austinmesh.org/learn/" target="_blank" rel="noreferrer">Austin Mesh</a>
+            </p>
+          </article>
+
+          <article class="card">
+            <h3>Texas floods and mutual-aid response</h3>
+            <p>
+              In later flood events, community mesh operators documented the use of
+              off-grid radio communications for mutual aid when commercial networks
+              were degraded or unavailable.
+            </p>
+            <p class="citation">
+              Source: <a href="https://dev.to/noperai42eng/how-to-survive-an-infrastructure-meltdown-with-meshtastic-and-meshcore-2026-dej" target="_blank" rel="noreferrer">DEV Community case study</a>
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="partners">
+        <div class="section-heading">
+          <p class="eyebrow">Building relationships</p>
+          <h2>Partners and stakeholders across Vermont.</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="partner-table">
+            <thead>
+              <tr>
+                <th>Organization</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Vermont Emergency Management</td>
+                <td>Emergency comms resilience, infrastructure placement</td>
+              </tr>
+              <tr>
+                <td>VCGI</td>
+                <td>GIS data, sensor network integration</td>
+              </tr>
+              <tr>
+                <td>Burlington DPW / City Hall</td>
+                <td>Node placement on city-owned buildings</td>
+              </tr>
+              <tr>
+                <td>Vermont State Parks</td>
+                <td>Ridgeline and summit node placement</td>
+              </tr>
+              <tr>
+                <td>Green Mountain Club</td>
+                <td>Trail network nodes, backcountry communication</td>
+              </tr>
+              <tr>
+                <td>UVM Facilities</td>
+                <td>Campus node placement and power access</td>
+              </tr>
+              <tr>
+                <td>Center for Rural Studies</td>
+                <td>Agricultural sensor network, rural resilience framing</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section alt" id="faq">
+        <div class="section-heading">
+          <p class="eyebrow">Questions</p>
+          <h2>Frequently asked questions.</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Do I need a ham radio license?</summary>
+            <p>No. Standard Meshtastic and MeshCore operation on 915MHz falls under FCC Part 15 — the same unlicensed category as WiFi routers and Bluetooth devices.</p>
+          </details>
+          <details>
+            <summary>Does the mesh work without cell service or internet?</summary>
+            <p>Yes — that's the whole point. Devices talk directly to each other over LoRa radio and rebroadcast messages for one another, so the network keeps working even when cellular, internet, and grid power are all down.</p>
+          </details>
+          <details>
+            <summary>What does it cost to join?</summary>
+            <p>A personal handheld device runs $35–100. There's no subscription, no account, and no registration — install the free app, flash the firmware, and join the public BTV-Mesh channel.</p>
+          </details>
+          <details>
+            <summary>Is my traffic private?</summary>
+            <p>All channels use AES-256 encryption, and direct messages between two devices are end-to-end encrypted.</p>
+          </details>
+          <details>
+            <summary>How can UVM students get involved?</summary>
+            <p>This project is designed around ORCA (Open Research Community Accelerator) semester engagements, with open project areas in network deployment, GIS coverage modeling, public dashboards, and emergency knowledge systems. Reach out through VERSO's GitHub to get involved.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="section" id="emergency-management">
+        <div class="section-heading">
+          <p class="eyebrow">For partners</p>
+          <h2>Prepared for conversations with Vermont Emergency Management.</h2>
+        </div>
+        <div class="content-grid">
+          <div>
+            <p>
+              This site is intended to help VERSO share a clear, practical message
+              with the Director of Vermont Emergency Management and other public
+              partners: a modest, solar-powered mesh network can add a resilient
+              communications layer in the very conditions where existing systems
+              are most fragile.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Key messages</h3>
+            <ul>
+              <li>Low-cost, open-source, and locally deployable</li>
+              <li>Works without cell service, internet, or grid power</li>
+              <li>Supports community coordination in storms and outages</li>
+              <li>Can grow from a campus pilot into a broader Vermont network</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <p class="footer-brand">VERSO Mesh Network</p>
+          <p>A University of Vermont project bringing off-grid community resilience to Vermont, one node at a time.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <ul>
+            <li><a href="https://github.com/VERSO-UVM" target="_blank" rel="noreferrer">VERSO on GitHub</a></li>
+            <li><a href="#faq">FAQ</a></li>
+            <li><a href="#get-connected">Get connected</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Network</h4>
+          <ul>
+            <li><a href="https://meshmap.net" target="_blank" rel="noreferrer">Live node map</a></li>
+            <li><a href="https://flasher.meshtastic.org" target="_blank" rel="noreferrer">Firmware flasher</a></li>
+            <li><a href="#resilience">Case studies</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://meshtastic.org/docs" target="_blank" rel="noreferrer">Meshtastic docs</a></li>
+            <li><a href="https://github.com/ripplebiz/MeshCore" target="_blank" rel="noreferrer">MeshCore project</a></li>
+            <li><a href="#partners">Partners</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-bottom">VERSO • University of Vermont • Community mesh resilience for Vermont</p>
+    </footer>
+  </body>
+</html>
