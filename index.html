@@ -28,8 +28,10 @@
           <a href="#how-it-works">How It Works</a>
           <a href="#first-node">First Node</a>
           <a href="#community">Community</a>
+          <a href="#regional-networks">Regional</a>
           <a href="#resilience">Resilience</a>
           <a href="#faq">FAQ</a>
+          <a href="#deployment-strategy">Roadmap</a>
         </div>
         <a class="button nav-cta" href="#get-connected">Get Connected</a>
       </nav>
@@ -91,7 +93,27 @@
               <li>Community resilience during storms and outages</li>
               <li>Support for emergency planning and mutual aid</li>
               <li>Open participation for residents and volunteers</li>
+              <li>Open-source firmware and hardware — nothing proprietary, nothing locked down</li>
             </ul>
+          </div>
+        </div>
+
+        <div class="map-proof">
+          <img
+            class="map-proof-img"
+            src="assets/existing-mesh-map.jpg"
+            alt="Meshtastic mesh map showing existing nodes clustered around Burlington, Vermont, with coverage already reaching toward Montreal, the Adirondacks, and New Hampshire."
+            loading="lazy"
+          />
+          <div class="map-proof-copy">
+            <h3>This isn't a hypothetical network.</h3>
+            <p>
+              This live view from the Meshtastic app already shows dense node
+              clusters around Burlington, with coverage reaching toward
+              Montreal, the Adirondacks, and across New Hampshire. VERSO's
+              first node adds a durable, solar-powered anchor to a mesh that
+              volunteers and neighboring communities are already building.
+            </p>
           </div>
         </div>
       </section>
@@ -143,6 +165,157 @@
             </dl>
           </div>
         </div>
+
+        <div class="subsection">
+          <h3>Meshtastic vs. MeshCore</h3>
+          <p class="section-intro">
+            Both are open-source LoRa mesh firmware, and both run on the same
+            commodity hardware — they're not competitors so much as two
+            different tools for different stages of a deployment.
+          </p>
+          <div class="table-wrap">
+            <table class="partner-table">
+              <thead>
+                <tr>
+                  <th>Firmware</th>
+                  <th>Best for</th>
+                  <th>Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Meshtastic</td>
+                  <td>Community and grassroots deployment, getting started</td>
+                  <td>Larger community, more mature app ecosystem, flood routing</td>
+                </tr>
+                <tr>
+                  <td>MeshCore</td>
+                  <td>Municipal or managed deployments, 50+ node scale</td>
+                  <td>Smarter routing, structured JSON telemetry, defined node roles</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="case-lesson">
+            <strong>VERSO's approach:</strong> start with Meshtastic for the
+            Burlington pilot, where community adoption and app support matter
+            most — then evaluate MeshCore as the network scales toward a
+            formal, multi-node municipal deployment.
+          </p>
+        </div>
+
+        <div class="subsection">
+          <h3>Clients, routers, and repeaters</h3>
+          <div class="content-grid">
+            <div>
+              <p>
+                Every device on the mesh plays one of two roles. A
+                <strong>client</strong> is the handheld radio someone carries,
+                paired to their phone — it sends and receives messages and can
+                relay a hop or two, but it isn't meant to carry the network.
+                A <strong>router</strong> or <strong>repeater</strong> is
+                different: a fixed node, usually mounted at elevation, whose
+                main job is to rebroadcast every packet it hears so a message
+                travels far past the range of any single device. Repeaters
+                carry no GPS or telemetry chatter of their own — they exist
+                purely to extend everyone else's signal.
+              </p>
+              <p>
+                LoRa radio also depends on <strong>line of sight</strong>.
+                Hills, ridgelines, and dense tree cover attenuate or block the
+                signal outright, so elevation is the single biggest lever for
+                coverage — a repeater on a summit can "see" over terrain that
+                would stop a valley-to-valley link cold, turning a 2–3km
+                urban range into tens of kilometers.
+              </p>
+            </div>
+            <figure class="site-sim">
+              <img
+                src="assets/mount-mansfield-coverage-sim.png"
+                alt="Meshtastic Site Planner heatmap simulating radio coverage from a single node near Stowe, Lamoille County, showing predicted signal reaching Burlington, Plattsburgh, Montpelier, and Barre."
+                loading="lazy"
+              />
+              <figcaption>
+                Simulated coverage from one repeater sited near Stowe, close
+                to Mount Mansfield, modeled with the
+                <a href="https://meshtastic.org/docs/software/other/meshtastic-site-planner" target="_blank" rel="noreferrer">Meshtastic Site Planner</a>.
+                A single elevated node predicts signal reaching Burlington,
+                Plattsburgh, Montpelier, and Barre — a preview of what one
+                well-placed ridgeline repeater can do for Vermont's Phase 3
+                backbone.
+              </figcaption>
+            </figure>
+          </div>
+
+          <div class="setup-grid">
+            <div class="card">
+              <h4>Setting up a client</h4>
+              <ol>
+                <li>Flash Meshtastic firmware and set your region to US</li>
+                <li>In the app: Device Config → Role → <strong>Client</strong> (the default — no change needed for most people)</li>
+                <li>Pair over Bluetooth and carry it — no external antenna or fixed power required</li>
+                <li>Leave GPS on if you want to share your position with the mesh, or off to stay private</li>
+              </ol>
+            </div>
+            <div class="card">
+              <h4>Setting up a router or repeater</h4>
+              <ol>
+                <li>Mount at elevation with an external antenna, on wall or solar power</li>
+                <li>In the app: Device Config → Role → <strong>Router</strong> (relays and can still message) or <strong>Repeater</strong> (relay only, doesn't appear on the map)</li>
+                <li>Set a fixed position instead of tracking GPS movement</li>
+                <li>If the site has internet, enable WiFi + MQTT so the node shows up on <a href="https://meshmap.net" target="_blank" rel="noreferrer">meshmap.net</a></li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3>Open source, top to bottom</h3>
+          <div class="content-grid">
+            <div>
+              <p>
+                Nothing about this network depends on a single vendor.
+                Meshtastic and MeshCore firmware, the phone apps, and the
+                communication protocol are all developed in the open, with
+                source code anyone can read, audit, or modify. There's no
+                proprietary radio to buy from one manufacturer and no
+                subscription that could disappear if a company shuts down —
+                any Meshtastic-compatible LoRa board from any maker works on
+                the same mesh.
+              </p>
+              <p>
+                That matters for a public resilience project: the code
+                Vermont Emergency Management or a future town partner would
+                rely on during an outage is the same code anyone can inspect
+                today. VERSO plans to publish its own deployment
+                configuration, node placement research, and lessons learned
+                on GitHub, so any other Vermont community can copy the
+                approach without starting from scratch.
+              </p>
+            </div>
+            <div class="card">
+              <h3>Open-source stack</h3>
+              <dl class="spec-list">
+                <div>
+                  <dt>Firmware</dt>
+                  <dd><a href="https://github.com/meshtastic/firmware" target="_blank" rel="noreferrer">Meshtastic</a> &amp; <a href="https://github.com/ripplebiz/MeshCore" target="_blank" rel="noreferrer">MeshCore</a></dd>
+                </div>
+                <div>
+                  <dt>Apps</dt>
+                  <dd>Open-source Android, iOS &amp; web clients</dd>
+                </div>
+                <div>
+                  <dt>Hardware</dt>
+                  <dd>Commodity LoRa boards, no single vendor</dd>
+                </div>
+                <div>
+                  <dt>This project</dt>
+                  <dd><a href="https://github.com/VERSO-UVM" target="_blank" rel="noreferrer">VERSO on GitHub</a></dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="section" id="first-node">
@@ -174,6 +347,14 @@
             </p>
           </div>
         </div>
+
+        <p class="case-lesson">
+          <strong>Already in motion:</strong> Two Heltec V4 client devices
+          are already live on the mesh today — one carried by VERSO's
+          director, one with the student team — gathering real coverage
+          data around Burlington ahead of the first fixed node going in
+          at Votey.
+        </p>
       </section>
 
       <section class="section alt" id="get-connected">
@@ -254,45 +435,218 @@
         </div>
       </section>
 
+      <section class="section" id="regional-networks">
+        <div class="section-heading">
+          <p class="eyebrow">Neighboring networks</p>
+          <h2>Vermont isn't building this alone.</h2>
+        </div>
+        <p class="section-intro">
+          Volunteer-run mesh communities are already active across the
+          Northeast. VERSO is coordinating with these groups rather than
+          duplicating them — a Vermont mesh gets stronger every time a
+          neighboring state's network reaches further across the border.
+        </p>
+
+        <div class="region-grid">
+          <div class="region-col">
+            <h3>Vermont</h3>
+            <ul class="org-list">
+              <li>
+                <a href="https://greenmountainmesh.org/" target="_blank" rel="noreferrer">Green Mountain Mesh</a>
+                <p>Volunteer-run group building a statewide Meshtastic network, with hands-on sessions on radios, firmware, antennas, and safe node deployment for newcomers.</p>
+              </li>
+              <li>
+                <a href="http://vtmug.wikidot.com/" target="_blank" rel="noreferrer">Vermont Mesh Users Group (VTMUG)</a>
+                <p>Community wiki and resource hub for Vermont Meshtastic users, tracking firmware recommendations and local node practices.</p>
+              </li>
+            </ul>
+          </div>
+
+          <div class="region-col">
+            <h3>New Hampshire</h3>
+            <ul class="org-list">
+              <li>
+                <a href="https://nhmesh.com/" target="_blank" rel="noreferrer">NHMesh</a>
+                <p>Statewide New Hampshire LoRa mesh community running both Meshtastic and MeshCore, with open public channels and regular workshops and field tests.</p>
+              </li>
+              <li>
+                <a href="https://capitalmesh.net/" target="_blank" rel="noreferrer">Capital Region Mesh</a>
+                <p>Community-driven, non-commercial Meshtastic network serving Concord and New Hampshire's Capital Region.</p>
+              </li>
+            </ul>
+          </div>
+
+          <div class="region-col">
+            <h3>New York</h3>
+            <ul class="org-list">
+              <li>
+                <a href="https://cnymesh.org/" target="_blank" rel="noreferrer">CNYmesh</a>
+                <p>Community-powered mesh network centered on the Syracuse region, with long-range links reaching Rochester, Buffalo, Ithaca, and Albany.</p>
+              </li>
+              <li>
+                <a href="https://adkmesh.com/" target="_blank" rel="noreferrer">ADKMesh</a>
+                <p>Meshtastic community building coverage across the Adirondack Park in northern New York.</p>
+              </li>
+              <li>
+                <a href="https://stmesh.net/" target="_blank" rel="noreferrer">Southern Tier NY Mesh (STMesh)</a>
+                <p>Local builders growing a resilient, off-grid Meshtastic network across New York's Southern Tier.</p>
+              </li>
+              <li>
+                <a href="https://rocmesh.com/" target="_blank" rel="noreferrer">ROCMesh</a>
+                <p>Community organization creating and expanding the Meshtastic network around Rochester, New York.</p>
+              </li>
+              <li>
+                <a href="https://nyme.sh/" target="_blank" rel="noreferrer">MeshNY</a>
+                <p>Independent mesh network covering the greater New York City vicinity, and a jump-off directory to other regional Northeast mesh groups.</p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       <section class="section alt" id="resilience">
         <div class="section-heading">
           <p class="eyebrow">Redundancy and resilience</p>
           <h2>Mesh networks have already proven useful in real U.S. disasters.</h2>
         </div>
 
-        <div class="cards">
-          <article class="card">
-            <h3>Hurricane Helene, western North Carolina</h3>
-            <p>
-              After Helene disrupted power and communications across the region,
-              local groups and community networks used Meshtastic-based tools to
-              support coordination when mobile networks were unstable or down.
+        <div class="case-list">
+          <article class="case-study">
+            <div class="case-study-head">
+              <p class="eyebrow">September 2024 · Western North Carolina</p>
+              <h3>Hurricane Helene</h3>
+            </div>
+            <p class="case-study-summary">
+              Helene's flooding washed out highways, closed mountain passes,
+              and knocked out power for weeks. The FCC reported 3,432 cell
+              sites down across the Southeast — in the hardest-hit counties,
+              fewer than 10% remained operational. There was no pre-deployed
+              mesh infrastructure before the storm; adoption was entirely
+              organic, as people who already owned Meshtastic devices began
+              using them in the days and weeks afterward. That grassroots
+              response grew directly into NC Mesh, now building a statewide
+              network of grid- and solar-powered radios.
+            </p>
+            <div class="case-study-columns">
+              <div class="case-worked">
+                <h4>What worked</h4>
+                <ul>
+                  <li>Carried mutual-aid traffic for days — "family safe at shelter," "route 19 closed," "medic needed at 41st and Oak"</li>
+                  <li>Solar-charged devices with large battery reserves ran for days without grid power</li>
+                  <li>The mesh kept functioning as a standalone local network even with zero internet</li>
+                </ul>
+              </div>
+              <div class="case-didnt">
+                <h4>What didn't work</h4>
+                <ul>
+                  <li>Newcomers spamming status updates every 30 seconds briefly crowded out real emergency traffic</li>
+                  <li>No pre-deployed backbone meant early adopters were isolated "island" nodes with no mesh to join</li>
+                  <li>Most of the value arrived days to weeks later, once device density finally built up</li>
+                </ul>
+              </div>
+            </div>
+            <p class="case-lesson">
+              <strong>Key lesson for Vermont:</strong> The infrastructure needs
+              to exist before the disaster. A pre-deployed Burlington mesh
+              with documented operating conventions would have been
+              immediately useful during Irene and the 2023 floods — not
+              gradually useful over weeks.
             </p>
             <p class="citation">
               Sources: <a href="https://www.ncdps.gov/our-organization/emergency-management/tropical-storm-helene" target="_blank" rel="noreferrer">NC DPS</a>,
               <a href="https://ncmesh.net/learn/" target="_blank" rel="noreferrer">NC Mesh</a>,
-              <a href="https://www.telecomstechnews.com/news/how-to-achieve-reliable-communication-in-emergency-scenarios/" target="_blank" rel="noreferrer">FCC / telecom analysis</a>
+              <a href="https://www.telecomstechnews.com/news/how-to-achieve-reliable-communication-in-emergency-scenarios/" target="_blank" rel="noreferrer">FCC / telecom analysis</a>,
+              <a href="https://dev.to/noperai42eng/how-to-survive-an-infrastructure-meltdown-with-meshtastic-and-meshcore-2026-dej" target="_blank" rel="noreferrer">DEV Community case study</a>
             </p>
           </article>
 
-          <article class="card">
-            <h3>Winter Storm Uri, Texas</h3>
-            <p>
-              During the 2021 Texas power crisis, Austin Mesh was organized around
-              a clear goal: provide a text-messaging layer that could work without
-              cellular towers, internet, or grid power.
+          <article class="case-study">
+            <div class="case-study-head">
+              <p class="eyebrow">February 2021 – ongoing · Austin, Texas</p>
+              <h3>Winter Storm Uri &amp; Austin Mesh</h3>
+            </div>
+            <p class="case-study-summary">
+              Austin Mesh was founded in the wake of Winter Storm Uri, when
+              widespread power failures left residents without electricity,
+              heat, or communication for days. The goal from day one: a
+              city-wide text-messaging layer that works without any external
+              infrastructure — no power, no cell towers, no internet. Austin
+              Mesh frames this explicitly as an equity problem — first
+              responders have proprietary emergency systems, but ordinary
+              citizens don't. A community-owned, open-source mesh with no
+              subscription fees and sub-$100 devices closed that gap. It's now
+              one of the most thoroughly documented mesh deployments in the
+              country, covering roughly 2,600 square miles.
+            </p>
+            <div class="case-study-columns">
+              <div class="case-worked">
+                <h4>What worked</h4>
+                <ul>
+                  <li>Solar-powered repeaters on high points provide backbone coverage that personal devices connect to, instead of requiring device-to-device links</li>
+                  <li>A community-driven model with no central administration scaled organically as residents added nodes</li>
+                  <li>Published, detailed operating conventions cover channel discipline, firmware selection, and node configuration</li>
+                </ul>
+              </div>
+              <div class="case-didnt">
+                <h4>What didn't work</h4>
+                <ul>
+                  <li>MQTT bridging is discouraged — busy MQTT servers can flood the whole network and choke local traffic</li>
+                  <li>Hill-and-valley terrain often needs many relays; Meshtastic's default seven-hop ceiling constrains metro-scale coverage</li>
+                  <li>Getting non-technical residents to follow operating conventions remains an ongoing challenge as the network grows</li>
+                </ul>
+              </div>
+            </div>
+            <p class="case-lesson">
+              <strong>Key lesson for Vermont:</strong> Austin's published
+              operating conventions and firmware comparisons are worth reading
+              before finalizing Vermont's approach. Their move from Meshtastic
+              to a hybrid Meshtastic/MeshCore architecture as the network
+              scaled maps directly onto Burlington's likely growth path — no
+              need to reinvent what Austin has already documented.
             </p>
             <p class="citation">
-              Source: <a href="https://www.austinmesh.org/learn/" target="_blank" rel="noreferrer">Austin Mesh</a>
+              Sources: <a href="https://www.austinmesh.org/learn/" target="_blank" rel="noreferrer">Austin Mesh</a>,
+              <a href="https://www.austinmesh.org/learn/meshcore-vs-meshtastic/" target="_blank" rel="noreferrer">Austin Mesh — MeshCore vs. Meshtastic</a>
             </p>
           </article>
 
-          <article class="card">
-            <h3>Texas floods and mutual-aid response</h3>
-            <p>
-              In later flood events, community mesh operators documented the use of
-              off-grid radio communications for mutual aid when commercial networks
-              were degraded or unavailable.
+          <article class="case-study">
+            <div class="case-study-head">
+              <p class="eyebrow">2024–2025 · Texas flood events</p>
+              <h3>Texas floods and mutual-aid response</h3>
+            </div>
+            <p class="case-study-summary">
+              The 2024 and 2025 Texas floods gave Austin Mesh's pre-deployed
+              backbone a second, independent test. Because the repeater
+              infrastructure already existed from the Winter Storm Uri
+              build-out, community mesh operators didn't have to stand up a
+              network mid-disaster — they simply used the one that was already
+              there. Off-grid radio communications carried mutual-aid traffic
+              for days at a stretch while commercial networks were degraded or
+              unavailable.
+            </p>
+            <div class="case-study-columns">
+              <div class="case-worked">
+                <h4>What worked</h4>
+                <ul>
+                  <li>Existing backbone meant flood response started immediately instead of waiting on new node density to build</li>
+                  <li>Mutual-aid message patterns mirrored Helene's — status checks, road closures, resource locations, medical needs</li>
+                  <li>The network kept operating even as cellular and internet service degraded across affected areas</li>
+                </ul>
+              </div>
+              <div class="case-didnt">
+                <h4>What didn't work</h4>
+                <ul>
+                  <li>Coverage was still bounded by however far Austin's existing repeater footprint reached</li>
+                  <li>Public documentation of the flood response itself is thinner than Austin Mesh's general operating guides</li>
+                </ul>
+              </div>
+            </div>
+            <p class="case-lesson">
+              <strong>Key lesson for Vermont:</strong> This reinforces the
+              core lesson twice over — a backbone built before the emergency
+              is what makes the network useful on day one of the next one,
+              whether that emergency is a hurricane, an ice storm, or a flood.
             </p>
             <p class="citation">
               Source: <a href="https://dev.to/noperai42eng/how-to-survive-an-infrastructure-meltdown-with-meshtastic-and-meshcore-2026-dej" target="_blank" rel="noreferrer">DEV Community case study</a>
@@ -306,6 +660,13 @@
           <p class="eyebrow">Building relationships</p>
           <h2>Partners and stakeholders across Vermont.</h2>
         </div>
+        <p class="section-intro">
+          VERSO — the Vermont Research Open Source Program Office — builds
+          this project the way it builds its software: openly. Deployment
+          configurations, node placement research, and lessons learned get
+          published on GitHub as they're produced, so any Vermont town,
+          nonprofit, or campus can reuse the work instead of starting over.
+        </p>
         <div class="table-wrap">
           <table class="partner-table">
             <thead>
@@ -316,32 +677,16 @@
             </thead>
             <tbody>
               <tr>
-                <td>Vermont Emergency Management</td>
-                <td>Emergency comms resilience, infrastructure placement</td>
-              </tr>
-              <tr>
-                <td>VCGI</td>
-                <td>GIS data, sensor network integration</td>
-              </tr>
-              <tr>
-                <td>Burlington DPW / City Hall</td>
-                <td>Node placement on city-owned buildings</td>
-              </tr>
-              <tr>
-                <td>Vermont State Parks</td>
-                <td>Ridgeline and summit node placement</td>
-              </tr>
-              <tr>
-                <td>Green Mountain Club</td>
-                <td>Trail network nodes, backcountry communication</td>
-              </tr>
-              <tr>
                 <td>UVM Facilities</td>
                 <td>Campus node placement and power access</td>
               </tr>
               <tr>
-                <td>Center for Rural Studies</td>
-                <td>Agricultural sensor network, rural resilience framing</td>
+                <td>Vermont Research Open Source Program Office</td>
+                <td>Hardware donation and GIS analysis for placement</td>
+              </tr>
+              <tr>
+                <td><a href="https://www.laboratoryb.org/" target="_blank" rel="noreferrer">Lab B</a></td>
+                <td>Burlington hackerspace already running monthly mesh meetups, building node hardware, and helping with community deployment</td>
               </tr>
             </tbody>
           </table>
@@ -374,32 +719,87 @@
             <summary>How can UVM students get involved?</summary>
             <p>This project is designed around ORCA (Open Research Community Accelerator) semester engagements, with open project areas in network deployment, GIS coverage modeling, public dashboards, and emergency knowledge systems. Reach out through VERSO's GitHub to get involved.</p>
           </details>
+          <details>
+            <summary>Is this actually open source?</summary>
+            <p>Yes, top to bottom. The <a href="https://github.com/meshtastic/firmware" target="_blank" rel="noreferrer">Meshtastic firmware</a>, <a href="https://github.com/ripplebiz/MeshCore" target="_blank" rel="noreferrer">MeshCore</a>, and the phone apps are all open source, and the hardware isn't tied to one manufacturer — any compatible LoRa board works. VERSO is publishing its own deployment configuration and research on <a href="https://github.com/VERSO-UVM" target="_blank" rel="noreferrer">GitHub</a> as it's produced.</p>
+          </details>
         </div>
       </section>
 
-      <section class="section" id="emergency-management">
+      <section class="section" id="deployment-strategy">
         <div class="section-heading">
-          <p class="eyebrow">For partners</p>
-          <h2>Prepared for conversations with Vermont Emergency Management.</h2>
+          <p class="eyebrow">What's next</p>
+          <h2>A corridor-first approach to statewide coverage.</h2>
         </div>
         <div class="content-grid">
           <div>
             <p>
-              This site is intended to help VERSO share a clear, practical message
-              with the Director of Vermont Emergency Management and other public
-              partners: a modest, solar-powered mesh network can add a resilient
-              communications layer in the very conditions where existing systems
-              are most fragile.
+              VERSO is currently running GIS coverage analysis on potential
+              repeater sites along Vermont's main population corridors —
+              Burlington, Montpelier, Rutland, Brattleboro, and Bennington —
+              using terrain and viewshed modeling to find where a single
+              elevated node would do the most good before any hardware gets
+              committed to a site.
+            </p>
+            <p>
+              Beyond UVM, we're exploring partnerships with municipal
+              buildings and public libraries as deployment sites. Both are
+              spread across nearly every Vermont town, already have power and
+              roof or pole access, and carry a kind of public trust that
+              private property doesn't.
+            </p>
+            <p>
+              For now, deployment stays intentionally ad hoc — nodes go up
+              where a volunteer, partner, or research placement makes one
+              possible, rather than waiting on a single master plan. But as
+              the network grows past a handful of nodes, that approach needs
+              a backstop. VERSO is working to bring together an organizing
+              body — spanning VERSO, Green Mountain Mesh, Lab B, and
+              municipal partners — that can make shared decisions about
+              maintaining existing infrastructure and where new nodes go
+              next.
             </p>
           </div>
           <div class="card">
-            <h3>Key messages</h3>
+            <h3>Where we're focused</h3>
             <ul>
-              <li>Low-cost, open-source, and locally deployable</li>
-              <li>Works without cell service, internet, or grid power</li>
-              <li>Supports community coordination in storms and outages</li>
-              <li>Can grow from a campus pilot into a broader Vermont network</li>
+              <li>GIS viewshed analysis along the Burlington–Montpelier–Rutland–Brattleboro–Bennington corridor</li>
+              <li>Municipal buildings and public libraries as candidate host sites</li>
+              <li>Ad hoc placement for now — a partner or volunteer makes a site possible</li>
+              <li>Forming a shared organizing body for maintenance and node placement decisions</li>
             </ul>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3>Where the mesh can fail</h3>
+          <div class="table-wrap">
+            <table class="partner-table">
+              <thead>
+                <tr>
+                  <th>Risk</th>
+                  <th>Mitigation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>A key corridor repeater loses power or goes offline</td>
+                  <td>Prioritize solar sites with oversized battery reserves, and place overlapping nodes along each corridor so one outage doesn't split the mesh</td>
+                </tr>
+                <tr>
+                  <td>Hardware is damaged, stolen, or vandalized</td>
+                  <td>Favor secured municipal, library, or institutional sites over exposed public property, and keep per-node cost low enough that a loss isn't catastrophic</td>
+                </tr>
+                <tr>
+                  <td>Channel congestion as adoption grows, crowding out real traffic</td>
+                  <td>Publish and enforce Vermont-specific operating conventions before public launch, modeled on Austin Mesh's documented approach</td>
+                </tr>
+                <tr>
+                  <td>No one is responsible for a node once its installer moves on</td>
+                  <td>Stand up the organizing body early, with clear ownership and a maintenance plan attached to every site before it goes live</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -409,7 +809,7 @@
       <div class="footer-grid">
         <div class="footer-col">
           <p class="footer-brand">VERSO Mesh Network</p>
-          <p>A University of Vermont project bringing off-grid community resilience to Vermont, one node at a time.</p>
+          <p>A University of Vermont project bringing open-source, off-grid community resilience to Vermont, one node at a time.</p>
         </div>
         <div class="footer-col">
           <h4>Community</h4>
