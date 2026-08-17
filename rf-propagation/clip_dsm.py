@@ -27,11 +27,17 @@ def _vsi(url_or_path):
     return url_or_path
 
 
-def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFAULT_DSM_URL, force=False):
+def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFAULT_DSM_URL, force=False,
+             progress_interval_s=60):
     """Clips a radius_km window around (lon, lat) from dsm_url (remote or
     local) at resolution_m, writing out_path. Skips the fetch entirely if
     out_path already exists, unless force=True. Returns True if a fetch
-    happened, False if it was skipped."""
+    happened, False if it was skipped.
+
+    Reads in row-chunks (rather than one single read) so a percent-done
+    line can be printed roughly every progress_interval_s seconds --
+    otherwise a large fetch prints nothing at all until it's fully done,
+    indistinguishable from having hung."""
     if os.path.exists(out_path) and not force:
         print(f"{out_path} already exists, skipping fetch (use --force to re-fetch)")
         return False
@@ -56,7 +62,29 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
         print(f"Fetching window {window.width:.0f}x{window.height:.0f} native px "
               f"-> {out_width}x{out_height} px @ {resolution_m}m ...")
 
-        data = src.read(1, window=window, out_shape=(out_height, out_width), resampling=Resampling.average)
+        data = np.empty((out_height, out_width), dtype="float32")
+        n_chunks = min(out_height, 200)
+        chunk_bounds = np.linspace(0, out_height, n_chunks + 1).astype(int)
+
+        last_print = t0
+        for i in range(n_chunks):
+            r0, r1 = int(chunk_bounds[i]), int(chunk_bounds[i + 1])
+            if r1 <= r0:
+                continue
+            sub_window = Window(
+                window.col_off, window.row_off + r0 * scale,
+                window.width, (r1 - r0) * scale,
+            )
+            data[r0:r1, :] = src.read(
+                1, window=sub_window, out_shape=(r1 - r0, out_width), resampling=Resampling.average
+            )
+
+            now = time.time()
+            if now - last_print >= progress_interval_s or i == n_chunks - 1:
+                pct = 100.0 * r1 / out_height
+                print(f"  ... {pct:5.1f}% fetched ({(now - t0) / 60:.1f} min elapsed)")
+                last_print = now
+
         if src.nodata is not None:
             data = np.where(data == src.nodata, np.nan, data)
 
@@ -89,9 +117,13 @@ def main():
     ap.add_argument("--dsm-url", default=DEFAULT_DSM_URL, help="local path or URL to the DSM (First Return)")
     ap.add_argument("--out", required=True)
     ap.add_argument("--force", action="store_true", help="re-fetch even if --out already exists")
+    ap.add_argument("--progress-interval-s", type=float, default=60.0, help="seconds between progress prints")
     args = ap.parse_args()
 
-    clip_dsm(args.lon, args.lat, args.out, args.radius_km, args.resolution_m, args.dsm_url, args.force)
+    clip_dsm(
+        args.lon, args.lat, args.out, args.radius_km, args.resolution_m, args.dsm_url, args.force,
+        args.progress_interval_s,
+    )
 
 
 if __name__ == "__main__":
