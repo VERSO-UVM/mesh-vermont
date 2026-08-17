@@ -7,7 +7,7 @@ This is ONLY here so the model is runnable out of the box. Replace with:
     candidate sites + a margin, reproject to EPSG:4326 if needed.
   - Real candidate sites: in ArcGIS, add Lon/Lat fields to Candidate_Sites
     with Calculate Geometry (Point X/Y, EPSG:4326), then export the
-    attribute table to CSV (name, lon, lat, height_agl_m).
+    attribute table to CSV (name, lon, lat, height_above_surface_m).
 """
 import numpy as np
 import rasterio
@@ -74,7 +74,7 @@ def make_sites():
         ("Ridge_Hilltop", -73.00, 44.40, 20.0),
     ]
     with open(OUT_SITES, "w") as f:
-        f.write("name,lon,lat,height_agl_m\n")
+        f.write("name,lon,lat,height_above_surface_m\n")
         for name, lon, lat, h in sites:
             f.write(f"{name},{lon},{lat},{h}\n")
     print(f"wrote {OUT_SITES}")

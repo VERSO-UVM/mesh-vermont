@@ -58,6 +58,23 @@ class DEM:
     def elevation_at_lonlat(self, lon: float, lat: float) -> float:
         return float(self.elevation_at_lonlat_arrays(np.array([lon]), np.array([lat]))[0])
 
+    """True if (lon, lat) falls inside this raster's actual extent.
+        elevation_at_lonlat silently clamps out-of-bounds points to the
+        nearest edge pixel rather than erroring, so callers that need to
+        know whether a point is genuinely covered (not just clamped)
+        should check this first."""
+    def contains_lonlat(self, lon: float, lat: float) -> bool:
+        lons = np.array([lon], dtype=np.float64)
+        lats = np.array([lat], dtype=np.float64)
+        if self._to_dem_crs is not None:
+            xs, ys = self._to_dem_crs.transform(lons, lats)
+        else:
+            xs, ys = lons, lats
+        a, b, c, d, e, f = self._inv
+        col = a * xs[0] + b * ys[0] + c
+        row = d * xs[0] + e * ys[0] + f
+        return 0 <= row < self.height and 0 <= col < self.width
+
     """Bilinear-interpolates raster values at fractional (row, col)
         pixel coordinates, clamping out-of-bounds coordinates to the
         nearest edge pixel."""

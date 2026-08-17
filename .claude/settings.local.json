@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./venv/bin/pip freeze *)",
+      "Bash(./venv/bin/python -c ' *)",
+      "Bash(python3 clip_dsm.py --lon -73.1981146 --lat 44.4793348 --radius-km 2 --resolution-m 10 --out /tmp/votey_hall_dsm_test.tif)",
+      "Bash(python3 -m py_compile clip_sites.py clip_dsm.py)",
+      "Bash(python3 clip_sites.py --sites ../sites.csv --radius-km 2 --resolution-m 10 --out-dir /tmp/clip_sites_test)",
+      "Bash(rm -rf /tmp/clip_sites_test /tmp/votey_hall_dsm_test.tif)",
+      "Bash(python3 check_dem.py data/votey_hall_dsm.tif)",
+      "Bash(python3 -m py_compile rf_model/*.py run_coverage.py make_synthetic_dem.py check_dem.py clip_dsm.py clip_sites.py)",
+      "Bash(rm -rf example_data)",
+      "Bash(python3 make_synthetic_dem.py)",
+      "Bash(python3 run_coverage.py)",
+      "Bash(python3 -m py_compile clip_sites.py)",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

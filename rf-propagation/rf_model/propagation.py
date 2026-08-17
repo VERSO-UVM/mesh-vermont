@@ -33,8 +33,8 @@ MESHTASTIC_DEFAULTS = dict(
     tx_power_dbm=27.0,  # ~500 mW; Part 15 allows up to 30 dBm (1 W)
     tx_antenna_gain_dbi=3.0,  # typical omni whip on a fixed node
     rx_antenna_gain_dbi=3.0,
-    tx_height_agl_m=10.0,  # fixed/repeater node mounted on a pole or roof
-    rx_height_agl_m=2.0,  # handheld / vehicle-mounted node
+    tx_height_above_surface_m=10.0,  # fixed/repeater node mounted on a pole or roof
+    rx_height_above_surface_m=2.0,  # handheld / vehicle-mounted node
     rx_sensitivity_dbm=-129.0,  # SX1262, LongFast preset (SF11/BW250) typical
     cable_loss_db=0.5,
 )
@@ -49,8 +49,8 @@ class LinkParams:
     tx_power_dbm: float = MESHTASTIC_DEFAULTS["tx_power_dbm"]
     tx_antenna_gain_dbi: float = MESHTASTIC_DEFAULTS["tx_antenna_gain_dbi"]
     rx_antenna_gain_dbi: float = MESHTASTIC_DEFAULTS["rx_antenna_gain_dbi"]
-    tx_height_agl_m: float = MESHTASTIC_DEFAULTS["tx_height_agl_m"]
-    rx_height_agl_m: float = MESHTASTIC_DEFAULTS["rx_height_agl_m"]
+    tx_height_above_surface_m: float = MESHTASTIC_DEFAULTS["tx_height_above_surface_m"]
+    rx_height_above_surface_m: float = MESHTASTIC_DEFAULTS["rx_height_above_surface_m"]
     rx_sensitivity_dbm: float = MESHTASTIC_DEFAULTS["rx_sensitivity_dbm"]
     cable_loss_db: float = MESHTASTIC_DEFAULTS["cable_loss_db"]
     step_m: float = 100.0  # terrain profile sampling interval
@@ -131,8 +131,8 @@ def link_budget_point_to_point(dem, tx_lonlat, rx_lonlat, params: LinkParams = L
     rx_elev = dem.elevation_at_lonlat(rx_lon, rx_lat)
     elevations = dem.elevation_at_lonlat_arrays(np.array(lons), np.array(lats))
 
-    tx_total_height = tx_elev + params.tx_height_agl_m
-    rx_total_height = rx_elev + params.rx_height_agl_m
+    tx_total_height = tx_elev + params.tx_height_above_surface_m
+    rx_total_height = rx_elev + params.rx_height_above_surface_m
 
     all_distances = np.concatenate(([0.0], distances, [distance_m]))
     all_elevations = np.concatenate(([tx_elev], elevations, [rx_elev]))

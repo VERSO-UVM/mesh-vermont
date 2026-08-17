@@ -32,7 +32,7 @@ def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, 
     )
     elevations = dem.elevation_at_lonlat_arrays(np.asarray(lons), np.asarray(lats))
 
-    tx_total_height = tx_elev + params.tx_height_agl_m
+    tx_total_height = tx_elev + params.tx_height_above_surface_m
     wavelength = prop.C / (params.freq_mhz * 1e6)
 
     all_distances = np.concatenate(([0.0], distances_m))
@@ -41,7 +41,7 @@ def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, 
     received = np.empty(n)
     for k in range(n):
         d_k = distances_m[k]
-        rx_total_height = elevations[k] + params.rx_height_agl_m
+        rx_total_height = elevations[k] + params.rx_height_above_surface_m
         v_max = prop.worst_case_diffraction_v(
             all_distances[: k + 2], all_elevations[: k + 2], tx_total_height, rx_total_height, wavelength
         )

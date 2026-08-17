@@ -37,16 +37,29 @@ python run_coverage.py          # writes output/*.png and *.tif
 
 ## Using real data
 
-**DEM**: needs to be actual elevation (bare-earth DEM or a full-surface
-DSM) — *not* an nDSM (normalized DSM), which stores object heights above
-ground rather than elevation and will flatten all real terrain in the
-model. Vermont's statewide bare-earth DEM (`STATEWIDE_2023_10M_DEMHF.tif`)
-is available from [VT Open Data](https://s3.us-east-2.amazonaws.com/vtopendata-prd/Elevation/) —
-clip it to your area of interest (ArcGIS's Clip Raster tool works fine)
-and export as a GeoTIFF. Any CRS is fine, the model reprojects lon/lat
-queries into the raster's own CRS automatically.
+**DEM/DSM**: needs to be actual elevation — *not* an nDSM (normalized DSM),
+which stores object heights above ground rather than elevation and will
+flatten all real terrain in the model. Any CRS is fine, the model
+reprojects lon/lat queries into the raster's own CRS automatically.
 
-Before running the model on a new DEM export, sanity-check it:
+The easiest source is VT Open Data's statewide DSM
+(`STATEWIDE_2023_35cm_DSMFR.tif`, "First Return" — ground + buildings +
+canopy already combined, a complete real product). It's ~414GB, but you
+never download it in full: `clip_sites.py` pulls only a small windowed
+clip per site directly from the remote file (via GDAL's overview-aware
+decimated reads), and skips any site that already has a clipped file on
+disk, so it's always safe to re-run after adding a new candidate site:
+
+```bash
+python clip_sites.py --sites ../sites.csv --radius-km 30
+```
+
+This writes one `data/<site_name>_dsm.tif` per site in `sites.csv`. Use
+`--force` to re-fetch a site that's already been clipped (e.g. after VT
+Open Data updates the source). For a single one-off site instead of the
+whole CSV, `clip_dsm.py` takes `--lon`/`--lat` directly.
+
+Before running the model on a new DEM/DSM, sanity-check it:
 
 ```bash
 python check_dem.py path/to/your_dem.tif
@@ -56,14 +69,14 @@ This flags the two most common problems in seconds: an accidentally-huge
 raster (the model loads the whole band into memory) and an nDSM mistaken
 for a DEM.
 
-**Candidate sites**: a CSV with columns `name,lon,lat,height_agl_m`. In
+**Candidate sites**: a CSV with columns `name,lon,lat,height_above_surface_m`. In
 ArcGIS, add Lon/Lat fields to `Candidate_Sites` via Calculate Geometry
 (point X/Y, EPSG:4326), then export the attribute table to CSV. The
 project's site list lives at `../sites.csv` (one level up, in
 `mesh-vermont/`).
 
 ```bash
-python run_coverage.py --dem path/to/your_dem.tif --sites ../sites.csv --radius-km 30
+python run_coverage.py --dem data/Votey_Hall_dsm.tif --sites ../sites.csv --radius-km 30
 ```
 
 `--dem` and `--sites` are the only arguments you need to change — see
@@ -107,7 +120,9 @@ azimuth count, output folder), all of which have sensible defaults.
 - `rf_model/coverage.py` — radial coverage sweep, GeoTIFF export, plotting
 - `run_coverage.py` — CLI driver: link budgets + coverage map
 - `check_dem.py` — pre-flight validation for a DEM before running the model
-- `build_dsm.py` — reconstructs a local DSM (DEM + nDSM) for a small area,
-  without downloading either statewide source in full
+- `clip_dsm.py` — clips a small windowed DSM around one lon/lat from VT
+  Open Data's statewide DSM, without downloading it in full
+- `clip_sites.py` — runs `clip_dsm.py` for every site in a sites CSV,
+  skipping any that already have a clipped file on disk
 - `make_synthetic_dem.py` + `example_data/` — placeholder DEM/sites for
   testing the pipeline without real data
