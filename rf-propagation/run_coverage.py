@@ -8,6 +8,7 @@ import argparse
 import csv
 import os
 
+from clip_sites import location_name
 from rf_model import DEM, LinkParams, compute_coverage, link_budget_point_to_point, plot_coverage, save_coverage_geotiff
 
 
@@ -25,6 +26,25 @@ def load_sites(path):
                 )
             sites.append((row["name"], float(row["lon"]), float(row["lat"]), float(height_str)))
     return sites
+
+
+def _dedupe_by_location(sites_3tuple, precision=5):
+    """Collapses sites sharing the same (rounded) lon/lat down to a single
+    labeled point, stripping the height-variant suffix (see
+    clip_sites.location_name) from the label. Height-variant sites (e.g.
+    Mansfield_1.1_1m/_1.2_5m/_1.3_10m) would otherwise plot as overlapping,
+    unreadable markers/text at the exact same map position -- this is only
+    for the plotted markers, not the point-to-point link budgets above,
+    which still evaluate every individual site."""
+    seen = set()
+    out = []
+    for name, lon, lat in sites_3tuple:
+        key = (round(lon, precision), round(lat, precision))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((location_name(name), lon, lat))
+    return out
 
 
 def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths):
@@ -68,7 +88,7 @@ def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths
     png_path = os.path.join(out_dir, f"{tx_name}_coverage.png")
     tif_path = os.path.join(out_dir, f"{tx_name}_coverage.tif")
     nearby_sites = [(s[0], s[1], s[2]) for s in sites if dem.contains_lonlat(s[1], s[2])]
-    plot_coverage(coverage, png_path, candidate_sites=nearby_sites)
+    plot_coverage(coverage, png_path, candidate_sites=_dedupe_by_location(nearby_sites))
     save_coverage_geotiff(coverage, tif_path)
     print(f"Wrote {png_path}")
     print(f"Wrote {tif_path} (EPSG:4326 -- drag straight into your ArcGIS project)")
