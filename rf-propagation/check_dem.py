@@ -12,6 +12,10 @@ import rasterio
 
 
 def main():
+    """CLI entry point: opens the given DEM/DSM, prints its key metadata,
+    and flags common problems (oversized raster, all-nodata, or a
+    normalized-DSM mistaken for absolute elevation) before exiting non-zero
+    if any were found."""
     ap = argparse.ArgumentParser()
     ap.add_argument("dem_path")
     args = ap.parse_args()
@@ -35,6 +39,8 @@ def main():
 
         band = ds.read(1)
         nodata = ds.nodata
+        # Mask out the nodata sentinel (if any), then any remaining
+        # inf/NaN, so summary stats below only reflect real elevation data.
         valid = band[band != nodata] if nodata is not None else band
         valid = valid[np.isfinite(valid)]
 
@@ -44,6 +50,10 @@ def main():
             vmin, vmax, vmed = float(np.min(valid)), float(np.max(valid)), float(np.median(valid))
             print(f"Value range: {vmin:.1f} to {vmax:.1f}  (median {vmed:.1f})")
 
+            # Heuristic: absolute elevation in Vermont is at least tens of
+            # meters, while a normalized DSM (object height above ground)
+            # centers near 0 and rarely exceeds ~30-40m even for tall
+            # buildings/trees -- this range/max combo is a strong tell.
             if -50 <= vmed <= 50 and vmax < 100:
                 problems.append(
                     f"Median value is {vmed:.1f} and max is {vmax:.1f} -- this looks like an "

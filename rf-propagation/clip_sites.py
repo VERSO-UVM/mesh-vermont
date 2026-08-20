@@ -23,6 +23,8 @@ _HEIGHT_VARIANT_SUFFIX = re.compile(r"\.\d+_\d+m$")
 
 
 def load_sites(path):
+    """Reads a sites CSV (name, lon, lat columns) into a list of
+    (name, lon, lat) tuples."""
     sites = []
     with open(path) as f:
         for row in csv.DictReader(f):
@@ -31,11 +33,26 @@ def load_sites(path):
 
 
 def safe_filename(name):
+    """Collapses any run of characters unsafe for a filename into a single
+    underscore, so a site/location label can be used directly as a path
+    component."""
     return re.sub(r"[^A-Za-z0-9_-]+", "_", name.strip())
 
 
 def location_name(site_name):
+    """Strips the height-variant suffix (see _HEIGHT_VARIANT_SUFFIX) from a
+    site name, leaving the shared physical-location label."""
     return _HEIGHT_VARIANT_SUFFIX.sub("", site_name)
+
+
+def dsm_filename(label, radius_km, resolution_m):
+    """Builds the output filename for a location's DSM clip, e.g.
+    "camels_hump_50km_5m_dsm.tif" -- radius/resolution are baked into the
+    name so clips of the same location at different sizes/resolutions
+    don't collide, and the file's provenance is clear at a glance. Values
+    are formatted with %g so whole numbers print without a trailing
+    ".0" (30km, not 30.0km) while fractional ones keep their precision."""
+    return f"{safe_filename(label)}_{radius_km:g}km_{resolution_m:g}m_dsm.tif"
 
 
 def group_by_location(sites, precision=5):
@@ -45,6 +62,9 @@ def group_by_location(sites, precision=5):
     groups = {}
     order = []
     for name, lon, lat in sites:
+        # Round to `precision` decimal degrees (~1m at 5dp) so sites at the
+        # "same" physical location but with float-rounding differences in
+        # their CSV coordinates still group together.
         key = (round(lon, precision), round(lat, precision))
         if key not in groups:
             groups[key] = {"label": location_name(name), "lon": lon, "lat": lat, "names": []}
@@ -54,6 +74,9 @@ def group_by_location(sites, precision=5):
 
 
 def main():
+    """CLI entry point: loads sites.csv, groups sites into unique
+    locations, and fetches a DSM clip for each location that doesn't
+    already have one on disk."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--sites", default="../sites.csv")
     ap.add_argument("--radius-km", type=float, default=30.0)
@@ -69,7 +92,7 @@ def main():
     print(f"Loaded {len(sites)} sites from {args.sites} -> {len(locations)} unique location(s)\n")
 
     for loc in locations:
-        out_path = os.path.join(args.out_dir, f"{safe_filename(loc['label'])}_dsm.tif")
+        out_path = os.path.join(args.out_dir, dsm_filename(loc["label"], args.radius_km, args.resolution_m))
         names = ", ".join(loc["names"])
         print(f"--- {loc['label']} ({loc['lon']}, {loc['lat']}) [{names}] -> {out_path} ---")
         clip_dsm(loc["lon"], loc["lat"], out_path, args.radius_km, args.resolution_m, args.dsm_url, args.force)

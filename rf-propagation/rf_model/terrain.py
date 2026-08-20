@@ -10,10 +10,12 @@ import numpy as np
 import pyproj
 import rasterio
 
-"""Loads a single-band elevation raster fully into memory and answers
+
+class DEM:
+    """Loads a single-band elevation raster fully into memory and answers
     elevation-at-lon/lat queries against it (with automatic reprojection
     if the raster isn't already in EPSG:4326)."""
-class DEM:
+
     def __init__(self, path: str):
         self.path = path
         self._ds = rasterio.open(path)
@@ -24,9 +26,16 @@ class DEM:
         band = self._ds.read(1).astype(np.float64)
         nodata = self._ds.nodata
         if nodata is not None:
+            # Swap nodata sentinel for NaN so downstream math (interpolation,
+            # min/max) doesn't silently treat it as a real elevation value.
             band[band == nodata] = np.nan
         self._band = band
 
+        # Affine transform maps pixel (row, col) -> CRS (x, y); its inverse
+        # maps CRS coordinates back to fractional pixel space, which is what
+        # bilinear sampling needs. Unpacked to scalars once so _bilinear can
+        # do the matrix multiply by hand (faster than calling rasterio's
+        # index() per point for large arrays of query points).
         inv = ~self.transform
         self._inv = (inv.a, inv.b, inv.c, inv.d, inv.e, inv.f)
 
@@ -37,8 +46,8 @@ class DEM:
                 "EPSG:4326", self.crs, always_xy=True
             )
 
-    """Vectorized elevation lookup for arrays of lon/lat points."""
     def elevation_at_lonlat_arrays(self, lons: np.ndarray, lats: np.ndarray) -> np.ndarray:
+        """Vectorized elevation lookup for arrays of lon/lat points."""
         lons = np.asarray(lons, dtype=np.float64)
         lats = np.asarray(lats, dtype=np.float64)
 
@@ -49,21 +58,23 @@ class DEM:
         else:
             xs, ys = lons, lats
 
+        # Apply the inverse affine transform (CRS x/y -> fractional pixel
+        # row/col) by hand: cols = a*x + b*y + c, rows = d*x + e*y + f.
         a, b, c, d, e, f = self._inv
         cols = a * xs + b * ys + c
         rows = d * xs + e * ys + f
         return self._bilinear(rows, cols)
 
-    """Elevation lookup for a single lon/lat point."""
     def elevation_at_lonlat(self, lon: float, lat: float) -> float:
+        """Elevation lookup for a single lon/lat point."""
         return float(self.elevation_at_lonlat_arrays(np.array([lon]), np.array([lat]))[0])
 
-    """True if (lon, lat) falls inside this raster's actual extent.
+    def contains_lonlat(self, lon: float, lat: float) -> bool:
+        """True if (lon, lat) falls inside this raster's actual extent.
         elevation_at_lonlat silently clamps out-of-bounds points to the
         nearest edge pixel rather than erroring, so callers that need to
         know whether a point is genuinely covered (not just clamped)
         should check this first."""
-    def contains_lonlat(self, lon: float, lat: float) -> bool:
         lons = np.array([lon], dtype=np.float64)
         lats = np.array([lat], dtype=np.float64)
         if self._to_dem_crs is not None:
@@ -75,20 +86,26 @@ class DEM:
         row = d * xs[0] + e * ys[0] + f
         return 0 <= row < self.height and 0 <= col < self.width
 
-    """Bilinear-interpolates raster values at fractional (row, col)
+    def _bilinear(self, rows: np.ndarray, cols: np.ndarray) -> np.ndarray:
+        """Bilinear-interpolates raster values at fractional (row, col)
         pixel coordinates, clamping out-of-bounds coordinates to the
         nearest edge pixel."""
-    def _bilinear(self, rows: np.ndarray, cols: np.ndarray) -> np.ndarray:
+        # The four surrounding integer pixels for each fractional (row, col).
         row0 = np.floor(rows).astype(int)
         col0 = np.floor(cols).astype(int)
         row1 = row0 + 1
         col1 = col0 + 1
 
+        # Clamp indices to valid range so points just outside the raster
+        # (or exactly on the last row/col) sample the nearest edge pixel
+        # instead of raising an index error.
         row0c = np.clip(row0, 0, self.height - 1)
         row1c = np.clip(row1, 0, self.height - 1)
         col0c = np.clip(col0, 0, self.width - 1)
         col1c = np.clip(col1, 0, self.width - 1)
 
+        # Fractional offset within the pixel cell, used as the interpolation
+        # weight between the low and high neighbor on each axis.
         fr = rows - row0
         fc = cols - col0
 
@@ -97,6 +114,8 @@ class DEM:
         v10 = self._band[row1c, col0c]
         v11 = self._band[row1c, col1c]
 
+        # Interpolate across columns first (top/bottom edges), then across
+        # rows between those two results -- standard bilinear interpolation.
         top = v00 * (1 - fc) + v01 * fc
         bottom = v10 * (1 - fc) + v11 * fc
         return top * (1 - fr) + bottom * fr

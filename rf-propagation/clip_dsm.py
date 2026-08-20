@@ -22,6 +22,9 @@ DEFAULT_DSM_URL = "https://s3.us-east-2.amazonaws.com/vtopendata-prd/Elevation/S
 
 
 def _vsi(url_or_path):
+    """Prefixes an HTTP(S) URL with GDAL's /vsicurl/ virtual filesystem so
+    rasterio streams byte ranges over the network instead of downloading
+    the whole file; local paths are passed through unchanged."""
     if url_or_path.startswith("http://") or url_or_path.startswith("https://"):
         return "/vsicurl/" + url_or_path
     return url_or_path
@@ -48,13 +51,20 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
     with rasterio.open(vsi_url) as src:
         print(f"Source CRS: {src.crs}, native res: {src.res}, size: {src.width}x{src.height}")
 
+        # Reproject the query point into the source raster's native CRS,
+        # since the clip window below is computed in that CRS's units (not
+        # lon/lat degrees).
         to_src_crs = pyproj.Transformer.from_crs("EPSG:4326", src.crs, always_xy=True)
         cx, cy = to_src_crs.transform(lon, lat)
         half = radius_km * 1000.0
         window = from_bounds(cx - half, cy - half, cx + half, cy + half, transform=src.transform)
         window = window.round_offsets().round_lengths()
+        # Clip to the raster's actual bounds in case the requested radius
+        # extends past the edge of the statewide dataset.
         window = window.intersection(Window(0, 0, src.width, src.height))
 
+        # scale > 1 means we're downsampling (native res finer than the
+        # requested resolution_m), which is the norm here (source is 0.35m).
         scale = resolution_m / src.res[0]
         out_width = max(int(window.width / scale), 1)
         out_height = max(int(window.height / scale), 1)
@@ -63,6 +73,8 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
               f"-> {out_width}x{out_height} px @ {resolution_m}m ...")
 
         data = np.empty((out_height, out_width), dtype="float32")
+        # Cap at 200 chunks so tiny outputs don't get sliced into more
+        # chunks than they have rows (chunk_bounds dedupes via r1<=r0 below).
         n_chunks = min(out_height, 200)
         chunk_bounds = np.linspace(0, out_height, n_chunks + 1).astype(int)
 
@@ -71,6 +83,9 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
             r0, r1 = int(chunk_bounds[i]), int(chunk_bounds[i + 1])
             if r1 <= r0:
                 continue
+            # Each chunk is a horizontal strip of the *output* raster;
+            # convert its row range back to native-resolution source rows
+            # (by multiplying by scale) to build the matching source window.
             sub_window = Window(
                 window.col_off, window.row_off + r0 * scale,
                 window.width, (r1 - r0) * scale,
@@ -88,6 +103,10 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
         if src.nodata is not None:
             data = np.where(data == src.nodata, np.nan, data)
 
+        # window_transform gives the affine transform for the clipped
+        # window at *native* resolution; scale it up by the same
+        # downsampling factor used for the reads so it matches out_width/
+        # out_height instead of the native window size.
         transform = src.window_transform(window) * rasterio.Affine.scale(
             window.width / out_width, window.height / out_height
         )
@@ -109,6 +128,7 @@ def clip_dsm(lon, lat, out_path, radius_km=30.0, resolution_m=10.0, dsm_url=DEFA
 
 
 def main():
+    """CLI entry point: parses args and delegates to clip_dsm()."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--lon", type=float, required=True)
     ap.add_argument("--lat", type=float, required=True)

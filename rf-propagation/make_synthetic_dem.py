@@ -52,6 +52,8 @@ def make_dem():
     terrain = terrain.astype("float32")
 
     transform = from_bounds(LON_MIN, LAT_MIN, LON_MAX, LAT_MAX, SIZE, SIZE)
+    # meshgrid built lat increasing downward (row 0 = LAT_MIN), but a
+    # north-up GeoTIFF needs row 0 = LAT_MAX -- flip rows to match.
     terrain_north_up = np.flipud(terrain)
 
     with rasterio.open(

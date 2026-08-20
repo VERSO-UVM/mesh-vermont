@@ -68,52 +68,66 @@ class LinkResult:
     margin_db: float
     is_los: bool
 
-"""Free-space path loss (dB) for the given distance(s) and frequency,
-    per the standard FSPL formula. Distance is floored at 1m."""
+
 def free_space_path_loss_db(distance_m, freq_mhz):
+    """Free-space path loss (dB) for the given distance(s) and frequency,
+    per the standard FSPL formula. Distance is floored at 1m."""
+    # Floor at 1m so log10(0) can't happen for a Tx/Rx at (near) the same point.
     distance_km = np.maximum(np.asarray(distance_m, dtype=np.float64), 1.0) / 1000.0
     return 20 * np.log10(distance_km) + 20 * np.log10(freq_mhz) + 32.44
 
-"""Apparent terrain rise (m) at a point between two ends of a path,
+
+def curvature_bulge_m(d1_m, d2_m, k=K_FACTOR):
+    """Apparent terrain rise (m) at a point between two ends of a path,
     caused by Earth's curvature under the k-factor effective-earth-radius
     approximation. d1_m/d2_m are the distances from that point to each end."""
-def curvature_bulge_m(d1_m, d2_m, k=K_FACTOR):
     return (d1_m * d2_m) / (2 * k * EARTH_RADIUS_M)
 
 
-"""ITU-R P.526 simplified single-knife-edge diffraction loss (dB)."""
 def knife_edge_diffraction_loss_db(v):
+    """ITU-R P.526 simplified single-knife-edge diffraction loss (dB)."""
     v = np.atleast_1d(np.asarray(v, dtype=np.float64))
     loss = np.zeros_like(v)
+    # Below v = -0.78 the obstruction is far enough below the line-of-sight
+    # that diffraction loss is negligible (~0 dB) and the formula isn't
+    # meant to be applied -- those entries stay at the zero-init above.
     mask = v > -0.78
     vv = v[mask]
     loss[mask] = 6.9 + 20 * np.log10(np.sqrt((vv - 0.1) ** 2 + 1) + vv - 0.1)
     return np.maximum(loss, 0.0)
 
-"""Max diffraction parameter v over all interior profile points.
+
+def worst_case_diffraction_v(distances_m, elevations_m, tx_total_height_m, rx_total_height_m, wavelength_m):
+    """Max diffraction parameter v over all interior profile points.
     distances_m: distances from Tx for each profile sample, 0 <= d <= d_total
     (endpoint samples at d=0 and d=d_total are included but ignored)
     elevations_m: terrain elevation (not including antenna height) at each sample"""
-def worst_case_diffraction_v(distances_m, elevations_m, tx_total_height_m, rx_total_height_m, wavelength_m):
     d_total = distances_m[-1] if len(distances_m) else 0.0
+    # Only interior points can obstruct the path -- the Tx/Rx endpoints
+    # themselves aren't candidate obstructions.
     interior = (distances_m > 0) & (distances_m < d_total)
     if not np.any(interior) or d_total <= 0:
-        return -999.0
+        return -999.0  # no interior points (or zero-length path) -> treat as fully clear
 
     d_i = distances_m[interior]
     elev_i = elevations_m[interior]
     d2_i = d_total - d_i
 
+    # Height of the straight Tx-Rx line-of-sight line at each interior
+    # point, linearly interpolated by fraction of distance covered.
     los_height_i = tx_total_height_m + (rx_total_height_m - tx_total_height_m) * (d_i / d_total)
     bulge_i = curvature_bulge_m(d_i, d2_i)
+    # How far the (curvature-adjusted) terrain pokes above the LOS line;
+    # positive means the terrain obstructs the path at this point.
     h_i = (elev_i + bulge_i) - los_height_i
 
+    # Standard Fresnel diffraction parameter v for each candidate obstruction.
     v_i = h_i * np.sqrt(2.0 / wavelength_m * (1.0 / d_i + 1.0 / d2_i))
     return float(np.max(v_i))
 
 
-"""Full terrain-aware link budget between two fixed points."""
 def link_budget_point_to_point(dem, tx_lonlat, rx_lonlat, params: LinkParams = LinkParams()) -> LinkResult:
+    """Full terrain-aware link budget between two fixed points."""
     tx_lon, tx_lat = tx_lonlat
     rx_lon, rx_lat = rx_lonlat
 
@@ -134,6 +148,8 @@ def link_budget_point_to_point(dem, tx_lonlat, rx_lonlat, params: LinkParams = L
     tx_total_height = tx_elev + params.tx_height_above_surface_m
     rx_total_height = rx_elev + params.rx_height_above_surface_m
 
+    # Stitch the Tx/Rx endpoints back onto the interior profile so the
+    # diffraction search sees the full 0..d_total path.
     all_distances = np.concatenate(([0.0], distances, [distance_m]))
     all_elevations = np.concatenate(([tx_elev], elevations, [rx_elev]))
 

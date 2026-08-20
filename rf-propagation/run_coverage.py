@@ -27,13 +27,15 @@ def load_sites(path):
     return sites
 
 
-"""Runs one Tx site's point-to-point link budgets + coverage map against an
+def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths):
+    """Runs one Tx site's point-to-point link budgets + coverage map against an
     already-loaded DEM and site list. Sites outside the DEM's actual extent
     are skipped (with a warning) rather than silently computing a wrong
     link budget from clamped edge-pixel elevation -- callers with sites
     spread across multiple regions should pass a DEM that only covers the
     area they actually clipped for that Tx site."""
-def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths):
+    # next(...) raises StopIteration (via the generator) if tx_name isn't in
+    # sites -- deliberately unguarded so a typo'd --tx-site fails loudly.
     tx = next(s for s in sites if s[0] == tx_name)
     if not dem.contains_lonlat(tx[1], tx[2]):
         raise ValueError(f"Tx site '{tx_name}' falls outside the DEM's extent -- wrong DEM for this site?")
@@ -72,9 +74,9 @@ def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths
     print(f"Wrote {tif_path} (EPSG:4326 -- drag straight into your ArcGIS project)")
 
 
-"""CLI entry point: parses args, loads the DEM and sites CSV once, then
-    delegates to run_for_site for a single Tx site."""
 def main():
+    """CLI entry point: parses args, loads the DEM and sites CSV once, then
+    delegates to run_for_site for a single Tx site."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--dem", default="example_data/synthetic_dem.tif")
     ap.add_argument("--sites", default="example_data/example_sites.csv")
