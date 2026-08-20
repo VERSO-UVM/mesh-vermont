@@ -19,14 +19,16 @@ from scipy.interpolate import griddata
 from . import propagation as prop
 from .propagation import LinkParams
 
-"""Walks outward from the Tx along a single azimuth, sampling the DEM
+
+def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, params: LinkParams):
+    """Walks outward from the Tx along a single azimuth, sampling the DEM
     once for the whole ray, then computes received power at each distance
     step using the terrain profile accumulated so far (so the worst
     obstruction before each point is reused instead of resampling)."""
-
-def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, params: LinkParams):
     geod = pyproj.Geod(ellps="WGS84")
     n = len(distances_m)
+    # Vectorized "walk n steps along this azimuth" -- one geodesic forward
+    # call for the whole ray instead of n separate calls.
     lons, lats, _ = geod.fwd(
         np.full(n, tx_lon), np.full(n, tx_lat), np.full(n, azimuth_deg), distances_m
     )
@@ -35,6 +37,8 @@ def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, 
     tx_total_height = tx_elev + params.tx_height_above_surface_m
     wavelength = prop.C / (params.freq_mhz * 1e6)
 
+    # Prepend the Tx point (distance 0) so the profile passed to the
+    # diffraction search always starts at the origin.
     all_distances = np.concatenate(([0.0], distances_m))
     all_elevations = np.concatenate(([tx_elev], elevations))
 
@@ -42,6 +46,11 @@ def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, 
     for k in range(n):
         d_k = distances_m[k]
         rx_total_height = elevations[k] + params.rx_height_above_surface_m
+        # all_distances[0] is the Tx point and all_distances[i] for i>=1
+        # corresponds to distances_m[i-1], so the profile up to and
+        # including sample k is indices 0..k+1 inclusive -> slice [:k+2].
+        # Reusing this growing prefix (rather than resampling per point) is
+        # what makes the radial sweep fast.
         v_max = prop.worst_case_diffraction_v(
             all_distances[: k + 2], all_elevations[: k + 2], tx_total_height, rx_total_height, wavelength
         )
@@ -59,11 +68,6 @@ def _ray_received_power(dem, tx_lon, tx_lat, tx_elev, azimuth_deg, distances_m, 
     return np.asarray(lons), np.asarray(lats), received
 
 
-"""Compute received-power samples on a ring/radial grid around a Tx site.
-
-    Returns a dict with the raw polar samples (lons, lats, received_power_dbm)
-    -- pass this to save_coverage_geotiff or plot_coverage to visualize it.
-    """
 def compute_coverage(
     dem,
     tx_lon: float,
@@ -73,6 +77,11 @@ def compute_coverage(
     resolution_m: float = 200.0,
     n_azimuths: int = 72,
 ):
+    """Compute received-power samples on a ring/radial grid around a Tx site.
+
+    Returns a dict with the raw polar samples (lons, lats, received_power_dbm)
+    -- pass this to save_coverage_geotiff or plot_coverage to visualize it.
+    """
     tx_elev = dem.elevation_at_lonlat(tx_lon, tx_lat)
     distances_m = np.arange(resolution_m, radius_km * 1000.0 + resolution_m, resolution_m)
     azimuths = np.linspace(0, 360, n_azimuths, endpoint=False)
@@ -94,11 +103,16 @@ def compute_coverage(
         "radius_km": radius_km,
     }
 
-"""Interpolates the polar (azimuth/distance) coverage samples onto a
-    regular lon/lat grid via linear interpolation, falling back to
-    nearest-neighbor outside the sample convex hull so the whole grid
-    (including corners beyond the radial sweep) is filled."""
+
 def _rasterize(coverage, grid_resolution_deg=None, grid_size=400):
+    """Interpolates the polar (azimuth/distance) coverage samples onto a
+    regular lon/lat grid via linear interpolation, falling back to
+    nearest-neighbor outside the sample convex hull so the disc itself is
+    fully filled, then masks anything beyond the true sweep radius back to
+    NaN -- otherwise the nearest-neighbor fallback would extrapolate real
+    sample values into the grid's square corners, implying coverage was
+    computed out there when it never was. The result is a circular disc of
+    real data sitting in an otherwise-empty square grid."""
     lons, lats, power = coverage["lons"], coverage["lats"], coverage["received_power_dbm"]
     lon_min, lon_max = lons.min(), lons.max()
     lat_min, lat_max = lats.min(), lats.max()
@@ -117,11 +131,22 @@ def _rasterize(coverage, grid_resolution_deg=None, grid_size=400):
     nearest = griddata((lons, lats), power, (grid_x, grid_y), method="nearest")
     grid_power = np.where(np.isnan(grid_power), nearest, grid_power)
 
+    # Mask back out any grid cell farther from the Tx than the sweep
+    # actually reached, so the square grid's corners read as nodata
+    # instead of extrapolated coverage.
+    geod = pyproj.Geod(ellps="WGS84")
+    _, _, dist_m = geod.inv(
+        np.full(grid_x.shape, coverage["tx_lon"]), np.full(grid_x.shape, coverage["tx_lat"]),
+        grid_x, grid_y,
+    )
+    grid_power = np.where(dist_m <= coverage["radius_km"] * 1000.0, grid_power, np.nan)
+
     return grid_lon, grid_lat, grid_power
 
-"""Rasterize polar samples to an even lon/lat grid and write a GeoTIFF
-    (EPSG:4326) that can be dragged directly into an ArcGIS project."""
+
 def save_coverage_geotiff(coverage, out_path: str, grid_size: int = 400):
+    """Rasterize polar samples to an even lon/lat grid and write a GeoTIFF
+    (EPSG:4326) that can be dragged directly into an ArcGIS project."""
     import rasterio
     from rasterio.transform import from_bounds
 
@@ -141,26 +166,30 @@ def save_coverage_geotiff(coverage, out_path: str, grid_size: int = 400):
     ) as dst:
         dst.write(grid_power_flipped.astype("float32"), 1)
 
-"""Quick-look matplotlib PNG: received power relative to Rx sensitivity.
+
+def plot_coverage(coverage, out_path: str, grid_size: int = 400, candidate_sites=None, vmin=None, vmax=None):
+    """Quick-look matplotlib PNG: received power relative to Rx sensitivity.
 
     LoRa receivers are extremely sensitive, so margin often stays strongly
     positive even well past 20-30 km NLOS -- the color scale auto-ranges to
     the actual margin spread (always including 0 dB) unless you override
     vmin/vmax, otherwise a fixed +-20 dB scale washes out to solid green.
     """
-def plot_coverage(coverage, out_path: str, grid_size: int = 400, candidate_sites=None, vmin=None, vmax=None):
     import matplotlib.pyplot as plt
 
     grid_lon, grid_lat, grid_power = _rasterize(coverage, grid_size=grid_size)
     margin = grid_power - coverage["rx_sensitivity_dbm"]
 
     if vmin is None:
+        # 1st/99th percentile (rather than true min/max) so a single outlier
+        # sample doesn't stretch the color scale and wash out the rest.
         vmin = min(0.0, float(np.nanpercentile(margin, 1)))
     if vmax is None:
         vmax = max(0.0, float(np.nanpercentile(margin, 99)))
 
     fig, ax = plt.subplots(figsize=(8, 7))
     im = ax.pcolormesh(grid_lon, grid_lat, margin, shading="auto", cmap="RdYlGn", vmin=vmin, vmax=vmax)
+    # Black contour at 0 dB marks the boundary between "link works" and "link fails".
     ax.contour(grid_lon, grid_lat, margin, levels=[0], colors="black", linewidths=1.5)
     fig.colorbar(im, ax=ax, label="Link margin over Rx sensitivity (dB)")
     ax.plot(coverage["tx_lon"], coverage["tx_lat"], marker="^", color="black", markersize=10, label="Tx node")
