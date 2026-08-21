@@ -1,0 +1,5 @@
+name,freq_mhz,tx_power_dbm,tx_antenna_gain_dbi,rx_antenna_gain_dbi,rx_sensitivity_dbm,cable_loss_db
+meshtastic_longfast,915.0,27.0,3.0,3.0,-129.0,0.5
+meshtastic_shortfast,915.0,27.0,3.0,3.0,-109.0,0.5
+rak_wismesh,915.0,22.0,3.0,3.0,-129.0,0.5
+heltec_v4,915.0,28.0,3.0,3.0,-129.0,0.5
