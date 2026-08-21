@@ -21,7 +21,7 @@ import os
 
 from clip_sites import dsm_filename, group_by_location, load_sites as load_site_coords
 from rf_model import DEM
-from run_coverage import load_sites, run_for_site
+from run_coverage import load_radios, load_sites, run_for_site
 
 
 def main():
@@ -30,6 +30,7 @@ def main():
     model for every site, loading each location's DEM only once."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--sites", default="../sites.csv")
+    ap.add_argument("--radios", default="../radios.csv", help="radio profiles CSV")
     ap.add_argument("--data-dir", default="data")
     ap.add_argument(
         "--dem", default=None,
@@ -45,6 +46,8 @@ def main():
     args = ap.parse_args()
 
     sites = load_sites(args.sites)
+    radios = load_radios(args.radios)
+    print(f"Loaded {len(radios)} radio profile(s) from {args.radios}")
 
     if args.dem:
         # Single shared DSM path: skip the per-location file lookup and run
@@ -57,7 +60,7 @@ def main():
         print(f"Loaded {len(sites)} sites from {args.sites}\n")
         for site_name, *_ in sites:
             print(f"===== {site_name} =====")
-            run_for_site(dem, sites, site_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
+            run_for_site(dem, sites, radios, site_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
             print()
         return
 
@@ -84,7 +87,7 @@ def main():
         print(f"===== {loc['label']} ({dem_path}) =====")
         dem = DEM(dem_path)
         for site_name in loc["names"]:
-            run_for_site(dem, sites, site_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
+            run_for_site(dem, sites, radios, site_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
         print()
 
 

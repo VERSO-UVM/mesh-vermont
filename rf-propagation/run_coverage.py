@@ -9,12 +9,29 @@ import csv
 import os
 
 from clip_sites import location_name
-from rf_model import DEM, LinkParams, compute_coverage, link_budget_point_to_point, plot_coverage, save_coverage_geotiff
+from rf_model import (
+    DEM,
+    MESHTASTIC_DEFAULTS,
+    LinkParams,
+    compute_coverage,
+    link_budget_point_to_point,
+    plot_coverage,
+    save_coverage_geotiff,
+)
+
+# Everything a LinkParams needs except antenna height, which stays per-site
+# in sites.csv (the same radio can be mounted at different heights).
+RADIO_FIELDS = (
+    "freq_mhz", "tx_power_dbm", "tx_antenna_gain_dbi",
+    "rx_antenna_gain_dbi", "rx_sensitivity_dbm", "cable_loss_db",
+)
 
 
 def load_sites(path):
-    """Reads a sites CSV (name, lon, lat, height_above_surface_m columns) into a list
-    of (name, lon, lat, height_above_surface_m) tuples."""
+    """Reads a sites CSV (name, lon, lat, height_above_surface_m, radio
+    columns) into a list of (name, lon, lat, height_above_surface_m, radio)
+    tuples. radio is the row's `radio` column verbatim, or "" if the column
+    is missing/blank -- resolved against radios.csv by _radio_fields."""
     sites = []
     with open(path) as f:
         for row in csv.DictReader(f):
@@ -24,8 +41,33 @@ def load_sites(path):
                     f"Site '{row['name']}' has no height_above_surface_m value in {path} -- "
                     f"fill in an antenna height for it before running the model."
                 )
-            sites.append((row["name"], float(row["lon"]), float(row["lat"]), float(height_str)))
+            radio = (row.get("radio") or "").strip()
+            sites.append((row["name"], float(row["lon"]), float(row["lat"]), float(height_str), radio))
     return sites
+
+
+def load_radios(path):
+    """Reads a radios CSV (name + RADIO_FIELDS columns) into a dict of
+    name -> field dict, for looking up a site's radio parameters by name."""
+    radios = {}
+    with open(path) as f:
+        for row in csv.DictReader(f):
+            radios[row["name"].strip()] = {field: float(row[field]) for field in RADIO_FIELDS}
+    return radios
+
+
+def _radio_fields(radios, radio_name, site_name):
+    """Looks up a radio's LinkParams field overrides by name. Sites with no
+    radio column/value fall back to MESHTASTIC_DEFAULTS, so a sites CSV
+    without a `radio` column still runs (just without per-radio tuning)."""
+    if not radio_name:
+        return MESHTASTIC_DEFAULTS
+    if radio_name not in radios:
+        raise ValueError(
+            f"Site '{site_name}' references radio '{radio_name}', which isn't in radios.csv -- "
+            f"add a row for it or fix the typo."
+        )
+    return radios[radio_name]
 
 
 def _dedupe_by_location(sites_3tuple, precision=5):
@@ -47,27 +89,43 @@ def _dedupe_by_location(sites_3tuple, precision=5):
     return out
 
 
-def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths):
+def run_for_site(dem, sites, radios, tx_name, out_dir, radius_km, resolution_m, azimuths):
     """Runs one Tx site's point-to-point link budgets + coverage map against an
     already-loaded DEM and site list. Sites outside the DEM's actual extent
     are skipped (with a warning) rather than silently computing a wrong
     link budget from clamped edge-pixel elevation -- callers with sites
     spread across multiple regions should pass a DEM that only covers the
-    area they actually clipped for that Tx site."""
+    area they actually clipped for that Tx site.
+
+    Each link budget uses the Tx site's radio for freq/tx_power/tx_gain/
+    cable_loss and the Rx site's radio for rx_gain/rx_sensitivity, so
+    sites running different radios still get a correct one-directional
+    link budget for that direction."""
     # next(...) raises StopIteration (via the generator) if tx_name isn't in
     # sites -- deliberately unguarded so a typo'd --tx-site fails loudly.
     tx = next(s for s in sites if s[0] == tx_name)
     if not dem.contains_lonlat(tx[1], tx[2]):
         raise ValueError(f"Tx site '{tx_name}' falls outside the DEM's extent -- wrong DEM for this site?")
+    tx_radio = _radio_fields(radios, tx[4], tx[0])
 
     print(f"\n--- Point-to-point link budgets from {tx_name} ---")
-    for name, lon, lat, height_above_surface in sites:
+    for name, lon, lat, height_above_surface, radio_name in sites:
         if name == tx_name:
             continue
         if not dem.contains_lonlat(lon, lat):
             print(f"{tx_name:22s} -> {name:22s} SKIPPED (outside this DEM's extent, not covered by this clip)")
             continue
-        params = LinkParams(tx_height_above_surface_m=tx[3], rx_height_above_surface_m=height_above_surface)
+        rx_radio = _radio_fields(radios, radio_name, name)
+        params = LinkParams(
+            freq_mhz=tx_radio["freq_mhz"],
+            tx_power_dbm=tx_radio["tx_power_dbm"],
+            tx_antenna_gain_dbi=tx_radio["tx_antenna_gain_dbi"],
+            rx_antenna_gain_dbi=rx_radio["rx_antenna_gain_dbi"],
+            rx_sensitivity_dbm=rx_radio["rx_sensitivity_dbm"],
+            cable_loss_db=tx_radio["cable_loss_db"],
+            tx_height_above_surface_m=tx[3],
+            rx_height_above_surface_m=height_above_surface,
+        )
         result = link_budget_point_to_point(dem, (tx[1], tx[2]), (lon, lat), params)
         status = "LOS " if result.is_los else "NLOS"
         verdict = "LINK OK" if result.margin_db > 0 else "LINK FAILS"
@@ -78,7 +136,17 @@ def run_for_site(dem, sites, tx_name, out_dir, radius_km, resolution_m, azimuths
         )
 
     print(f"\nComputing coverage from {tx_name} out to {radius_km} km...")
-    params = LinkParams(tx_height_above_surface_m=tx[3])
+    # No specific Rx site for a coverage sweep, so assume the same radio
+    # model is listening on the far end (Tx site's own radio for every field).
+    params = LinkParams(
+        freq_mhz=tx_radio["freq_mhz"],
+        tx_power_dbm=tx_radio["tx_power_dbm"],
+        tx_antenna_gain_dbi=tx_radio["tx_antenna_gain_dbi"],
+        rx_antenna_gain_dbi=tx_radio["rx_antenna_gain_dbi"],
+        rx_sensitivity_dbm=tx_radio["rx_sensitivity_dbm"],
+        cable_loss_db=tx_radio["cable_loss_db"],
+        tx_height_above_surface_m=tx[3],
+    )
     coverage = compute_coverage(
         dem, tx[1], tx[2], params=params,
         radius_km=radius_km, resolution_m=resolution_m, n_azimuths=azimuths,
@@ -100,6 +168,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dem", default="example_data/synthetic_dem.tif")
     ap.add_argument("--sites", default="example_data/example_sites.csv")
+    ap.add_argument("--radios", default="example_data/example_radios.csv", help="radio profiles CSV")
     ap.add_argument("--tx-site", default=None, help="name of site to run coverage from (default: first site)")
     ap.add_argument("--radius-km", type=float, default=30.0)
     ap.add_argument("--resolution-m", type=float, default=250.0)
@@ -112,9 +181,11 @@ def main():
 
     sites = load_sites(args.sites)
     print(f"Loaded {len(sites)} candidate sites from {args.sites}")
+    radios = load_radios(args.radios)
+    print(f"Loaded {len(radios)} radio profile(s) from {args.radios}")
 
     tx_name = args.tx_site or sites[0][0]
-    run_for_site(dem, sites, tx_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
+    run_for_site(dem, sites, radios, tx_name, args.out_dir, args.radius_km, args.resolution_m, args.azimuths)
 
 
 if __name__ == "__main__":
